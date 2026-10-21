@@ -1,0 +1,42 @@
+{
+  "name": "cmu-prep",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "ingest": "tsx scripts/ingest.ts"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^4.0.85",
+    "@ai-sdk/google": "^4.0.102",
+    "@ai-sdk/groq": "^4.0.67",
+    "@ai-sdk/openai-compatible": "^3.0.75",
+    "@huggingface/transformers": "^4.3.1",
+    "ai": "^7.0.148",
+    "gray-matter": "^4.0.3",
+    "katex": "^0.19.0",
+    "next": "15.5.28",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-markdown": "^10.1.0",
+    "rehype-katex": "^7.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "15.5.28",
+    "tailwindcss": "^4",
+    "tsx": "^4.23.15",
+    "typescript": "^5"
+  }
+}
