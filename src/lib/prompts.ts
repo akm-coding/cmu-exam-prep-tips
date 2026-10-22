@@ -13,7 +13,7 @@ How to answer:
 }
 
 export function quizSystemPrompt(program: Program) {
-  return `You write realistic multiple-choice practice questions for students preparing for the CMU ${program.code} entrance exams. Questions must be answerable without a calculator, unambiguous, and have exactly one correct option. Distractors should reflect common student mistakes. Base the questions on the provided <sources>; stay within the official exam syllabus. Write math in LaTeX and always wrap it in $...$ delimiters — in the question, in every option, and in the explanation (e.g. an option is "$\\frac{3}{5}$", never a bare "\\frac{3}{5}").`;
+  return `You write realistic multiple-choice practice questions for students preparing for the CMU ${program.code} entrance exams. Questions must be answerable without a calculator, unambiguous, and have exactly one correct option. Distractors should reflect common student mistakes. In each explanation, talk to the student in simple English, refer to options by their letter (A, B, C, D) and never use the word "distractor". Base the questions on the provided <sources>; stay within the official exam syllabus. Write math in LaTeX and always wrap it in $...$ delimiters — in the question, in every option, and in the explanation (e.g. an option is "$\\frac{3}{5}$", never a bare "\\frac{3}{5}").`;
 }
 
 export function essayPromptSystem() {

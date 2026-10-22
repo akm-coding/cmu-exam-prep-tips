@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Clock, Lightbulb, Loader2, NotebookPen, RefreshCw, Send, Timer } from "lucide-react";
 import { postJson } from "@/lib/api";
 import { readNdjson } from "@/lib/ndjson";
 import { Markdown } from "./Markdown";
 
 const THEMES = ["Any", "Motivation", "Technology and society", "Problem solving / design", "Experience", "Ethics", "Future goals"];
 const TIME_LIMIT_MIN = 45;
+const TARGET = { min: 350, max: 500 };
 const DRAFT_KEY = "cmu-prep:essay-draft";
 
 interface EssayPrompt {
@@ -62,7 +64,7 @@ export function EssayPanel({ programId }: { programId: string }) {
         theme: theme === "Any" ? undefined : theme,
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Failed to create a prompt");
+      if (!res.ok) throw new Error(data.error ?? "Couldn't create a prompt. Please try again.");
       setPrompt(data);
       setEssay("");
       setFeedback("");
@@ -101,81 +103,112 @@ export function EssayPanel({ programId }: { programId: string }) {
 
   const mm = Math.floor(Math.abs(remainingSec) / 60);
   const ss = String(Math.abs(remainingSec) % 60).padStart(2, "0");
+  const wordState = words < TARGET.min ? "under" : words > TARGET.max ? "over" : "ok";
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="rounded-xl border border-border bg-surface p-4">
-        <p className="text-sm text-muted">
-          Part 2 of the SE Aptitude Test is one essay. Practise under a {TIME_LIMIT_MIN}-minute timer, then get
-          feedback against a practice rubric (CMU does not publish its own).
-        </p>
-        <div className="mt-3 flex flex-wrap items-end gap-2">
-          <label className="text-xs text-muted">
-            Prompt type
-            <select
-              value={theme}
-              onChange={(e) => setTheme(e.target.value)}
-              className="mt-1 block rounded-lg border border-border bg-surface-2 px-2 py-2 text-sm text-text"
-            >
-              {THEMES.map((t) => (
-                <option key={t}>{t}</option>
-              ))}
-            </select>
-          </label>
-          <button
-            onClick={newPrompt}
-            disabled={busy !== null}
-            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-text disabled:opacity-50"
-          >
-            {busy === "prompt" ? "Creating…" : prompt ? "New prompt" : "Get a prompt"}
+    <div className="grid gap-5">
+      {!prompt ? (
+        <div className="card p-6">
+          <span className="grid size-12 place-items-center rounded-2xl bg-primary-soft text-primary">
+            <NotebookPen size={22} />
+          </span>
+          <h2 className="mt-3 text-xl font-bold">Practise the essay</h2>
+          <p className="mt-1 text-sm leading-relaxed text-muted">
+            The SE Aptitude Test ends with one essay. Get a practice question, write for up to {TIME_LIMIT_MIN} minutes
+            (about {TARGET.min}–{TARGET.max} words), then get a score and tips.
+          </p>
+          <div className="mt-5 text-sm font-semibold">What kind of question?</div>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {THEMES.map((t) => (
+              <button key={t} onClick={() => setTheme(t)} className={`chip ${t === theme ? "chip-active" : ""}`}>
+                {t}
+              </button>
+            ))}
+          </div>
+          <button onClick={newPrompt} disabled={busy !== null} className="btn-primary mt-6 w-full sm:w-auto">
+            {busy === "prompt" ? <Loader2 size={17} className="animate-spin" /> : <Lightbulb size={17} />}
+            {busy === "prompt" ? "Thinking of a question…" : "Give me a question"}
           </button>
         </div>
-      </div>
+      ) : (
+        <>
+          <div className="card border-2 border-primary p-5">
+            <div className="flex items-start justify-between gap-3">
+              <span className="rounded-full bg-primary-soft px-2.5 py-1 text-xs font-bold text-primary">{prompt.type}</span>
+              <button
+                onClick={newPrompt}
+                disabled={busy !== null}
+                className="inline-flex items-center gap-1 text-xs font-semibold text-muted hover:text-text"
+              >
+                {busy === "prompt" ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />} New question
+              </button>
+            </div>
+            <p className="mt-3 text-lg font-semibold leading-relaxed">{prompt.prompt}</p>
+            <details className="mt-3 text-sm">
+              <summary className="cursor-pointer font-semibold text-primary">Planning hints</summary>
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-muted">
+                {prompt.tips.map((t) => (
+                  <li key={t}>{t}</li>
+                ))}
+              </ul>
+            </details>
+          </div>
 
-      {error && <div className="rounded-lg bg-bad-soft px-3 py-2 text-sm text-bad">{error}</div>}
+          <div className="card overflow-hidden">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-surface-2 px-4 py-2.5 text-sm">
+              <span
+                className={`inline-flex items-center gap-1.5 font-semibold ${
+                  !startedAt ? "text-muted" : remainingSec < 0 ? "text-bad" : remainingSec < 300 ? "text-warn" : ""
+                }`}
+              >
+                {startedAt ? <Timer size={16} /> : <Clock size={16} />}
+                {!startedAt
+                  ? `${TIME_LIMIT_MIN}:00 — starts when you type`
+                  : remainingSec < 0
+                    ? `Time's up (+${mm}:${ss})`
+                    : `${mm}:${ss} left`}
+              </span>
+              <span
+                className={`font-semibold ${
+                  wordState === "ok" ? "text-good" : wordState === "over" ? "text-warn" : "text-muted"
+                }`}
+              >
+                {words} / {TARGET.min}–{TARGET.max} words
+              </span>
+            </div>
+            <textarea
+              value={essay}
+              onChange={(e) => {
+                if (!startedAt) setStartedAt(Date.now());
+                setEssay(e.target.value);
+              }}
+              rows={14}
+              placeholder="Start with a sentence that answers the question directly…"
+              className="block w-full resize-y bg-surface p-4 text-[15px] leading-relaxed outline-none"
+            />
+            <div className="h-1 bg-surface-2">
+              <div
+                className={`h-full transition-all ${wordState === "over" ? "bg-warn" : "bg-primary"}`}
+                style={{ width: `${Math.min(100, (words / TARGET.min) * 100)}%` }}
+              />
+            </div>
+          </div>
 
-      {prompt && (
-        <div className="rounded-xl border border-accent bg-surface p-4">
-          <div className="text-xs font-semibold uppercase tracking-wide text-accent">{prompt.type}</div>
-          <p className="mt-1 font-medium">{prompt.prompt}</p>
-          <ul className="mt-2 list-disc pl-5 text-sm text-muted">
-            {prompt.tips.map((t) => (
-              <li key={t}>{t}</li>
-            ))}
-          </ul>
-
-          <textarea
-            value={essay}
-            onChange={(e) => {
-              if (!startedAt) setStartedAt(Date.now());
-              setEssay(e.target.value);
-            }}
-            rows={16}
-            placeholder="Start typing — the timer starts with your first keystroke."
-            className="mt-4 w-full rounded-lg border border-border bg-surface-2 p-3 text-sm leading-relaxed outline-none focus:border-accent"
-          />
-          <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-sm">
-            <span className="text-muted">
-              {words} words{" "}
-              {startedAt && (
-                <span className={remainingSec < 0 ? "text-bad" : remainingSec < 300 ? "text-accent" : ""}>
-                  · {remainingSec < 0 ? `over by ${mm}:${ss}` : `${mm}:${ss} left`}
-                </span>
-              )}
-            </span>
-            <button
-              onClick={submit}
-              disabled={busy !== null || words < 30}
-              className="rounded-lg bg-accent px-4 py-2 font-medium text-accent-text disabled:opacity-40"
-            >
-              {busy === "feedback" ? "Reading your essay…" : "Get feedback"}
+          <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <span className="text-xs text-muted">Your draft is saved in this browser.</span>
+            <button onClick={submit} disabled={busy !== null || words < 30} className="btn-primary">
+              {busy === "feedback" ? <Loader2 size={17} className="animate-spin" /> : <Send size={16} />}
+              {busy === "feedback" ? "Reading your essay…" : words < 30 ? "Write at least 30 words" : "Get feedback"}
             </button>
           </div>
-        </div>
+        </>
       )}
 
+      {error && <div className="rounded-xl bg-bad-soft px-4 py-3 text-sm text-bad">{error}</div>}
+
       {feedback && (
-        <div className="rounded-xl border border-border bg-surface p-4 text-sm">
+        <div className="card p-5 text-[15px]">
+          <div className="mb-2 text-xs font-bold uppercase tracking-wide text-primary">Feedback</div>
           <Markdown>{feedback}</Markdown>
         </div>
       )}

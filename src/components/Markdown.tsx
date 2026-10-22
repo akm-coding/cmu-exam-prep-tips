@@ -5,8 +5,23 @@ import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 
-// Turn "[2]" citations into links we can style; leave real [text](url) links alone.
-const withCitations = (md: string) => md.replace(/\[(\d{1,2})\](?!\()/g, "[$1](#src-$1)");
+// Turn "[2]" and "[1, 3]" citations into links we can style. Leave real [text](url)
+// links alone, and skip $…$ math so intervals like $[1, 3]$ stay math.
+const CITATION = /\[(\d{1,2}(?:\s*,\s*\d{1,2})*)\](?!\()/g;
+const withCitations = (md: string) =>
+  md
+    .split(/(\$\$[\s\S]*?\$\$|\$[^$\n]*\$)/)
+    .map((part, i) =>
+      i % 2
+        ? part
+        : part.replace(CITATION, (_, nums: string) =>
+            nums
+              .split(",")
+              .map((n) => `[${n.trim()}](#src-${n.trim()})`)
+              .join(""),
+          ),
+    )
+    .join("");
 
 export function Markdown({ children }: { children: string }) {
   return (

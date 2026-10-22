@@ -32,6 +32,12 @@ export interface Program {
   subjects: SubjectId[];
   practice: PracticeTrack[];
   hasEssay: boolean;
+  /** Short labels for the home-page card. */
+  tags: string[];
+  /** Plain-language facts shown on the Plan tab. */
+  keyFacts: string[];
+  /** Exam-day schedule shown on the Plan tab. */
+  examDay: { time: string; title: string; details: string[] }[];
 }
 
 const MATH_TOPICS = [
@@ -86,6 +92,9 @@ function comingSoon(
     subjects: ["admission", "english-placement"],
     practice: [],
     hasEssay: false,
+    tags: regularTrackExams,
+    keyFacts: [],
+    examDay: [],
   };
 }
 
@@ -150,6 +159,34 @@ export const PROGRAMS: Program[] = [
       eptTrack,
     ],
     hasEssay: true,
+    tags: ["Mathematics", "SE Aptitude Test", "Essay", "English test"],
+    keyFacts: [
+      "25 seats. Apply in Round 1 (Nov 30, 2026 – Jan 13, 2027) or Round 2 (Mar 16 – 22, 2027).",
+      "No minimum GPA, but you need Mathematics on your transcript (Thai system: Physics, Chemistry and Math).",
+      "English: IELTS 5.0, TOEFL iBT 61, Duolingo 85 or similar — otherwise take the CMU English Placement Test.",
+      "Studied at an international or English-medium school? You still need an English score or the CMU test.",
+      "Have SAT Math + EBRW of 800 or more? Use the Special Track — no CMU exams, only an interview.",
+    ],
+    examDay: [
+      {
+        time: "09:00 – 12:00",
+        title: "Subject tests",
+        details: [
+          "Mathematics — logic, functions, exponents and logs, trigonometry, 2×2 matrices",
+          "SE Aptitude Test — 20 computer basics + 10 logical thinking questions, then 1 essay",
+        ],
+      },
+      {
+        time: "13:00 – 16:00",
+        title: "English Placement Test",
+        details: ["Only if you don't have an English score. Listening, grammar and reading (2 hours)."],
+      },
+      {
+        time: "Following days",
+        title: "Online interview",
+        details: ["Everyone has an interview, on either track."],
+      },
+    ],
   },
   comingSoon("MMIT", "Modern Management and Information Technology", "College of Arts, Media and Technology (CAMT)", ["Mathematics", "MMIT Aptitude Test"], "New SAT (Math + EBRW) total ≥ 460"),
   comingSoon("ISCE", "Information Systems and Cybersecurity Engineering", "Faculty of Engineering", ["Mathematics", "Basic Knowledge of Engineering"], "SAT Math ≥ 600, ACT Math ≥ 24, AP Calculus ≥ 4, and others"),
